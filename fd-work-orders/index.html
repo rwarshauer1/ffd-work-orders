@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0C1F3D"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FFD Work Orders"/>
+<title>FFD Work Orders</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0C1F3D;min-height:100vh}
+.app{max-width:960px;margin:0 auto;padding:1rem}
+.header{display:flex;align-items:center;gap:20px;padding:20px 0 16px;margin-bottom:0;border-bottom:1px solid rgba(255,255,255,0.1)}
+.header-patch{width:76px;height:76px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid rgba(255,255,255,0.25)}
+.header-patch img{width:100%;height:100%;object-fit:cover}
+.header-text{flex:1}
+.header-dept{font-size:12px;color:#C8382A;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.header-title{font-size:24px;font-weight:800;color:#fff;letter-spacing:.01em;line-height:1.1;display:flex;align-items:center;gap:10px}
+.beta-badge{font-size:10px;font-weight:700;background:#C8382A;color:#fff;padding:3px 8px;border-radius:99px;letter-spacing:.06em;vertical-align:middle;flex-shrink:0}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px;font-weight:500}
+.header-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab-btn{padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);white-space:nowrap;transition:all .15s;font-family:inherit}
+.tab-btn:hover{border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.9)}
+.tab-btn.active{background:#C8382A;color:#fff;border-color:#C8382A}
+.content{background:#f4f5f7;border-radius:16px 16px 0 0;min-height:calc(100vh - 140px);padding:1.5rem;margin-top:1rem}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:1.75rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;padding-bottom:12px;border-bottom:2px solid #f0f2f5}
+.card-icon{width:32px;height:32px;border-radius:8px;background:#C8382A;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.card-title{font-size:15px;font-weight:700;color:#0C1F3D}
+label{font-size:12px;color:#666;display:block;margin-bottom:8px;margin-top:32px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+label:first-child{margin-top:0}
+.req{color:#C8382A;margin-left:2px}
+select,input,textarea{width:100%;font-size:15px;padding:12px 14px;border-radius:8px;border:1.5px solid #dde1e7;background:#fff;color:#111;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;transition:border .15s}
+select:focus,input:focus,textarea:focus{border-color:#0C1F3D}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'';position:absolute;right:13px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #888;pointer-events:none}
+textarea{resize:vertical;min-height:110px}
+input[readonly]{background:#f8f9fb;color:#999;cursor:not-allowed;border-color:#eee}
+input.err,select.err,textarea.err{border-color:#C8382A;background:#fff8f8}
+.err-msg{font-size:12px;color:#C8382A;margin-top:4px;display:none;font-weight:500}
+.err-msg.show{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+.full{grid-column:1/-1}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}.full{grid-column:1}.header{flex-wrap:wrap}.header-tabs{width:100%}.tab-btn{flex:1;text-align:center}}
+.btn-primary{margin-top:28px;width:100%;padding:15px;background:#C8382A;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit;letter-spacing:.02em}
+.btn-primary:hover{background:#a82d22}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed}
+.btn-search{padding:10px 20px;background:#0C1F3D;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;white-space:nowrap;font-family:inherit}
+.btn-search:hover{background:#1a3560}
+.btn-save{margin-top:20px;width:100%;padding:13px;background:#0C1F3D;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit}
+.btn-save:hover{background:#1a3560}
+.btn-save:disabled{background:#ccc;cursor:not-allowed}
+.banner{border-radius:8px;padding:12px 16px;text-align:center;display:none;margin-top:14px;font-size:14px;font-weight:500}
+.banner.show{display:block}
+.banner-success{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+.banner-err{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap;letter-spacing:.03em}
+.pill-red{background:#fef2f2;color:#C8382A;border:1px solid #fca5a5}
+.pill-orange{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+.pill-yellow{background:#fefce8;color:#854d0e;border:1px solid #fde68a}
+.pill-green{background:#f0fdf4;color:#166534;border:1px solid #86efac}
+.pill-blue{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.wo-card{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px;cursor:pointer;transition:all .15s;border-left:4px solid #e2e5ea}
+.wo-card:hover{border-color:#0C1F3D;border-left-color:#C8382A}
+.wo-card.status-Submitted{border-left-color:#C8382A}
+.wo-card.status-Repair-Pending{border-left-color:#ea580c}
+.wo-card.status-Delayed{border-left-color:#ca8a04}
+.wo-card.status-Closed{border-left-color:#16a34a}
+.wo-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wo-num{font-weight:800;font-size:15px;color:#0C1F3D;font-family:monospace;letter-spacing:.05em}
+.wo-type{font-size:12px;color:#888;margin-left:auto;font-weight:500}
+.wo-meta{font-size:12px;color:#888;margin-top:6px}
+.wo-preview{font-size:13px;color:#444;margin-top:5px;line-height:1.4}
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.chip{padding:5px 14px;border-radius:99px;border:1.5px solid #dde1e7;background:#fff;font-size:12px;cursor:pointer;color:#666;white-space:nowrap;font-weight:600;transition:all .15s;font-family:inherit}
+.chip:hover{border-color:#0C1F3D;color:#0C1F3D}
+.chip.active{background:#0C1F3D;color:#fff;border-color:#0C1F3D}
+.back-btn{background:none;border:none;color:#C8382A;font-size:13px;cursor:pointer;margin-bottom:1rem;padding:0;font-weight:600;font-family:inherit}
+.official-bar{font-size:11px;font-weight:800;letter-spacing:.1em;color:#fff;text-transform:uppercase;background:#0C1F3D;border-radius:8px;padding:10px 14px;margin-bottom:1.25rem;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}
+.official-bar::before,.official-bar::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.2)}
+.info-block{background:#f8f9fb;border-radius:8px;padding:10px 14px;margin-top:12px;border:1px solid #eef0f3}
+.info-lbl{font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.info-val{font-size:14px;color:#0C1F3D;font-weight:600;margin-top:3px;line-height:1.4}
+.notify-box{background:#EEF2FF;border:1px solid #c7d2fe;border-radius:8px;padding:12px 14px;margin-top:12px;font-size:13px;color:#3730a3}
+.notify-lbl{font-size:10px;font-weight:700;color:#4f46e5;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.list-view.hidden{display:none}
+.detail-view{display:none}.detail-view.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px 16px;border-top:3px solid #e2e5ea}
+.stat-card.s-red{border-top-color:#C8382A}
+.stat-card.s-orange{border-top-color:#ea580c}
+.stat-card.s-yellow{border-top-color:#ca8a04}
+.stat-card.s-green{border-top-color:#16a34a}
+.stat-lbl{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.stat-val{font-size:28px;font-weight:800;color:#0C1F3D;margin-top:4px}
+.loading-state{text-align:center;padding:2rem;color:#888;font-size:14px}
+.admin-locked{display:flex;align-items:center;justify-content:center;min-height:300px}
+.login-overlay{background:#fff;border:1px solid #e2e5ea;border-radius:14px;padding:2rem;max-width:360px;width:100%}
+.login-logo{width:56px;height:56px;border-radius:50%;overflow:hidden;margin:0 auto 1rem;border:2px solid #0C1F3D}
+.login-logo img{width:100%;height:100%;object-fit:cover}
+.login-title{font-size:17px;font-weight:800;margin-bottom:4px;color:#0C1F3D;text-align:center}
+.login-sub{font-size:13px;color:#888;margin-bottom:1.5rem;text-align:center}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.search-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap}
+.search-row>div{flex:1;min-width:180px}
+.search-row label{margin-top:0}
+.status-big{display:flex;align-items:center;gap:12px;margin:12px 0}
+.status-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.dot-red{background:#C8382A}.dot-orange{background:#ea580c}.dot-yellow{background:#ca8a04}.dot-green{background:#16a34a}
+.member-wo-detail{background:#f8f9fb;border-radius:10px;padding:14px;margin-top:10px;border:1px solid #eef0f3}
+.member-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #eef0f3;font-size:13px}
+.member-row:last-child{border-bottom:none}
+.member-row-lbl{color:#888;font-weight:600;flex-shrink:0;margin-right:12px;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.member-row-val{color:#0C1F3D;font-weight:600;text-align:right}
+.no-results{text-align:center;padding:2rem;color:#888;font-size:14px}
+.divider-or{display:flex;align-items:center;gap:12px;margin:1.25rem 0;color:#aaa;font-size:13px;font-weight:600}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:#e2e5ea}
+.unsaved-badge{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-left:8px}
+.gw-box{background:#f8f9fb;border:1.5px solid #dde1e7;border-radius:10px;padding:20px;margin-top:4px}
+.gw-title{font-size:13px;font-weight:700;color:#0C1F3D;margin-bottom:16px}
+.gw-item{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.gw-item:last-child{margin-bottom:0}
+.gw-item input[type="checkbox"]{width:20px;height:20px;flex-shrink:0;accent-color:#C8382A;cursor:pointer;appearance:auto;-webkit-appearance:auto;border:none;padding:0;background:transparent}
+.gw-lbl{font-size:14px;color:#333;font-weight:500;cursor:pointer;line-height:1.4}
+/* CHANGE PASSWORD */
+.change-pw-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.change-pw-title{font-size:14px;font-weight:700;color:#9a3412;margin-bottom:4px}
+.change-pw-sub{font-size:13px;color:#b45309;margin-bottom:1rem}
+/* FOOTER */
+.footer{background:#0C1F3D;padding:16px 1rem;text-align:center;font-size:11px;color:rgba(255,255,255,0.4);line-height:2}
+.footer a{color:rgba(255,255,255,0.5);text-decoration:none}
+.footer a:hover{color:#C8382A}
+
+/* AUDIT TRAIL */
+.audit-trail{margin-top:1rem}
+.audit-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.audit-entry{background:#f8f9fb;border-radius:8px;padding:10px 14px;margin-bottom:8px;border-left:3px solid #dde1e7}
+.audit-entry-who{font-size:12px;font-weight:700;color:#0C1F3D}
+.audit-entry-when{font-size:11px;color:#888;margin-left:6px}
+.audit-entry-changes{font-size:12px;color:#555;margin-top:4px;line-height:1.5}
+/* SUBMISSION MODAL */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:2000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:2rem;max-width:420px;width:100%;text-align:center}
+.modal-wo{font-size:48px;font-weight:800;color:#0C1F3D;font-family:monospace;letter-spacing:.05em;margin-bottom:4px}
+.modal-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.modal-assigned{font-size:14px;color:#333;margin-bottom:20px;line-height:1.5}
+.modal-assigned strong{color:#0C1F3D}
+.modal-divider{border:none;border-top:1px solid #e2e5ea;margin:16px 0}
+.modal-disclaimer{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:14px;font-size:13px;color:#9a3412;line-height:1.6;text-align:left;margin-bottom:20px}
+.modal-disclaimer strong{display:block;margin-bottom:6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.modal-ack{width:100%;padding:13px;background:#C8382A;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em}
+.modal-ack:hover{background:#a82d22}
+/* GATE */
+.gate{position:fixed;top:0;left:0;width:100%;height:100%;background:#0C1F3D;display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.gate-card{background:#fff;border-radius:16px;padding:2.5rem 2rem;max-width:380px;width:100%;text-align:center}
+.gate-patch{width:80px;height:80px;border-radius:50%;overflow:hidden;margin:0 auto 1.25rem;border:3px solid #0C1F3D}
+.gate-patch img{width:100%;height:100%;object-fit:cover}
+.gate-dept{font-size:11px;font-weight:700;color:#C8382A;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.gate-title{font-size:20px;font-weight:800;color:#0C1F3D;margin-bottom:6px}
+.gate-sub{font-size:13px;color:#888;margin-bottom:1.75rem;line-height:1.5}
+.gate-input{width:100%;font-size:18px;padding:12px 16px;border-radius:8px;border:2px solid #dde1e7;text-align:center;letter-spacing:.15em;font-family:inherit;outline:none;margin-bottom:4px;transition:border .15s}
+.gate-input:focus{border-color:#0C1F3D}
+.gate-btn{width:100%;padding:13px;background:#C8382A;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;font-family:inherit;letter-spacing:.02em;transition:background .15s}
+.gate-btn:hover{background:#a82d22}
+.gate-err{font-size:12px;color:#C8382A;margin-top:8px;display:none;font-weight:600}
+.gate-err.show{display:block}
+/* ADMIN LOGIN */
+.admin-username-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:#0C1F3D;font-weight:600;padding:10px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac}
+</style>
+</head>
+<body>
+
+<div class="gate" id="access-gate">
+  <div class="gate-card">
+    <div class="gate-patch"><img src="patch.png" alt="FFD" onerror="this.parentNode.innerHTML='<span style=\'color:#0C1F3D;font-size:14px;font-weight:800\'>FFD</span>'"/></div>
+    <div class="gate-dept" id="gate-dept-name">Your Fire Department</div>
+    <div class="gate-title">Work Order System</div>
+    <div class="gate-sub">Enter your department access code to continue</div>
+    <input class="gate-input" type="password" id="gate-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkGate()"/>
+    <div class="gate-err" id="gate-err">Incorrect access code. Please try again.</div>
+    <button class="gate-btn" onclick="checkGate()">Enter</button>
+  </div>
+</div>
+
+<div id="main-app" style="display:none">
+  <div class="app">
+    <div class="header">
+      <div class="header-patch"><img src="patch.png" alt="FFD" onerror="this.parentNode.innerHTML='<span style=\'color:#fff;font-size:13px;font-weight:700\'>FFD</span>'"/></div>
+      <div class="header-text">
+        <div class="header-dept" id="dept-name">Your Fire Department</div>
+        <div class="header-title">Work Order System <span class="beta-badge">BETA</span></div>
+        <div class="header-sub">Beta v1.1.0</div>
+      </div>
+      <div class="header-tabs">
+        <button class="tab-btn active" onclick="switchTab('submit',this)">New Work Order</button>
+        <button class="tab-btn" onclick="switchTab('status',this)">Check Status</button>
+        <button class="tab-btn" onclick="switchTab('admin',this)">Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="content">
+      <div class="section active" id="tab-submit">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+            <div class="card-title">Submit a work order</div>
+          </div>
+          <div class="grid2">
+            <div>
+              <label>Your name <span class="req">*</span></label>
+              <input type="text" id="f-name" placeholder="First Last" autocomplete="name"/>
+            </div>
+            <div>
+              <label>Badge number <span class="req">*</span></label>
+              <input type="text" id="f-badge" placeholder="4-digit badge #" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'');validateBadgeLive()"/>
+              <div class="err-msg" id="badge-err">Invalid badge number. Please try again or see an officer for assistance.</div>
+              <div class="err-msg" id="badge-junior">Junior firefighter badge — please find a member to submit this request.</div>
+            </div>
+            <div class="full">
+              <label>Primary type <span class="req">*</span></label>
+              <div class="sel-wrap"><select id="f-primary" onchange="updateSubtype()"><option value="">Select type</option><option value="apparatus-equip">On Apparatus Equipment</option><option value="apparatus-rig">Apparatus Issue</option><option value="station">Station Issue</option><option value="scba">SCBA</option><option value="ff">Firefighter Request</option><option value="radio">Radio Issue</option></select></div>
+            </div>
+            <div class="full" id="sub-apparatus-equip" style="display:none">
+              <label>Rig # <span class="req">*</span></label>
+              <div class="sel-wrap"><select id="f-rig-equip"><option value="">Select rig</option><!-- TODO: Add your rigs here --><option>Engine 1</option><option>Engine 2</option><option>Ladder 1</option></select></div>
+            </div>
+            <div class="full" id="sub-apparatus-rig" style="display:none">
+              <label>Rig # <span class="req">*</span></label>
+              <div class="sel-wrap"><select id="f-rig-rig"><option value="">Select rig</option><!-- TODO: Add your rigs here --><option>Engine 1</option><option>Engine 2</option><option>Ladder 1</option></select></div>
+            </div>
+            <div class="full" id="sub-station" style="display:none">
+              <label>Station subtype <span class="req">*</span></label>
+              <div class="sel-wrap"><select id="f-station-sub"><option value="">Select subtype</option><option>Station Equipment</option><option>Building Issue</option></select></div>
+            </div>
+            <div class="full" id="sub-ff" style="display:none">
+              <label>Request subtype <span class="req">*</span></label>
+              <div class="sel-wrap"><select id="f-ff-sub" onchange="updateGearWash()"><option value="">Select subtype</option><option>Gear Issue</option><option>Pager Issue</option><option>Technology Issue</option><option>Gear Wash Request</option></select></div>
+            </div>
+            <div class="full" id="issue-section">
+              <label>Describe the issue <span class="req">*</span></label>
+              <textarea id="f-issue" placeholder="Describe the exact problem in detail..."></textarea>
+            </div>
+            <div class="full" id="gear-wash-section" style="display:none">
+              <div class="gw-box">
+                <div class="gw-title">Before submitting, confirm all of the following:</div>
+                <div class="gw-item"><input type="checkbox" id="gw-bailout"/><label for="gw-bailout" class="gw-lbl">Bailout harness has been removed from gear</label></div>
+                <div class="gw-item"><input type="checkbox" id="gw-pockets"/><label for="gw-pockets" class="gw-lbl">All pockets have been emptied</label></div>
+                <div class="gw-item"><input type="checkbox" id="gw-external"/><label for="gw-external" class="gw-lbl">All external items have been removed from gear</label></div>
+              </div>
+              <div class="err-msg" id="gw-err">Please confirm all items above before submitting.</div>
+            </div>
+          </div>
+          <button class="btn-primary" id="submit-btn" onclick="submitWorkOrder()">Submit Work Order</button>
+          <div class="banner banner-success" id="submit-success"></div>
+          <div class="banner banner-err" id="submit-err"></div>
+        </div>
+      </div>
+
+      <div class="section" id="tab-status">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <div class="card-title">Check work order status</div>
+          </div>
+          <div class="search-row">
+            <div><label>Work order number</label><input type="text" id="s-woid" placeholder="e.g. 26-0001" oninput="this.value=this.value.toUpperCase()"/></div>
+            <button class="btn-search" onclick="searchByWOID()">Search</button>
+          </div>
+          <div class="divider-or">or</div>
+          <div class="search-row">
+            <div><label>Your badge number</label><input type="text" id="s-badge" placeholder="4-digit badge #" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"/></div>
+            <button class="btn-search" onclick="searchByBadge()">Search</button>
+          </div>
+          <div id="status-results"></div>
+        </div>
+      </div>
+
+      <div class="section" id="tab-admin">
+        <div class="admin-locked" id="admin-login-view">
+          <div class="login-overlay">
+            <div class="login-logo"><img src="patch.png" alt="FFD"/></div>
+            <div class="login-title">Admin Access</div>
+            <div class="login-sub">Sign in with your officer credentials</div>
+            <label>Username</label>
+            <input type="text" id="admin-user" placeholder="e.g. senia" autocomplete="username" autocapitalize="none"/>
+            <label>Password</label>
+            <input type="password" id="admin-pw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')checkAdminLogin()"/>
+            <button class="btn-primary" onclick="checkAdminLogin()">Sign in</button>
+            <p style="font-size:12px;color:#888;text-align:center;margin-top:14px;line-height:1.5">Forgot your password? Contact your system administrator to reset it. Report to <strong style="color:#0C1F3D">Your System Administrator</strong>.</p>
+            <div style="border-top:1px solid #e2e5ea;margin-top:16px;padding-top:16px;text-align:center">
+              <p style="font-size:12px;color:#888;margin-bottom:10px">Need admin access?</p>
+              <button onclick="showAccessRequest()" style="background:none;border:1.5px solid #0C1F3D;color:#0C1F3D;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">Request Access</button>
+            </div>
+            <div class="banner banner-err" id="login-err" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div id="change-pw-view" style="display:none">
+          <div class="change-pw-box">
+            <div class="change-pw-title">You must set a new password before continuing</div>
+            <div class="change-pw-sub">Your temporary password has been detected. Please choose a new password.</div>
+            <label>New password</label>
+            <input type="password" id="new-pw1" placeholder="New password (min 6 characters)"/>
+            <label>Confirm new password</label>
+            <input type="password" id="new-pw2" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')changePassword()"/>
+            <button class="btn-primary" onclick="changePassword()">Set new password</button>
+            <div class="banner banner-err" id="pw-err" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div id="admin-main-view" style="display:none">
+          <div class="admin-username-row" id="admin-username-row"></div>
+          <div class="list-view" id="admin-list" style="margin-top:1rem">
+            <div class="stats-row">
+              <div class="stat-card s-red"><div class="stat-lbl">Submitted</div><div class="stat-val" id="s-submitted">—</div></div>
+              <div class="stat-card s-orange"><div class="stat-lbl">Repair Pending</div><div class="stat-val" id="s-pending">—</div></div>
+              <div class="stat-card s-yellow"><div class="stat-lbl">Delayed</div><div class="stat-val" id="s-delayed">—</div></div>
+              <div class="stat-card s-green"><div class="stat-lbl">Closed</div><div class="stat-val" id="s-closed">—</div></div>
+            </div>
+            <div class="filter-row">
+              <button class="chip active" onclick="filterWO('all',this)">All</button>
+              <button class="chip" onclick="filterWO('Submitted',this)">Submitted</button>
+              <button class="chip" onclick="filterWO('Repair Pending',this)">Repair Pending</button>
+              <button class="chip" onclick="filterWO('Delayed',this)">Delayed</button>
+              <button class="chip" onclick="filterWO('Closed',this)">Closed</button>
+            </div>
+            <div id="wo-list"><div class="loading-state">Loading work orders...</div></div>
+          </div>
+          <div class="detail-view" id="admin-detail">
+            <button class="back-btn" onclick="closeDetail()">← Back to all work orders</button>
+            <div id="detail-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>© 2026 Your Name · Created for official use by Your Fire Department</div>
+    <div>Beta v1.1.0 · <a href="#" onclick="reportBug()">Report a bug</a></div>
+  </div>
+</div>
+
+<!-- REQUEST ACCESS MODAL -->
+<div class="modal-overlay" id="access-request-modal">
+  <div class="modal-box">
+    <div style="font-size:18px;font-weight:800;color:#0C1F3D;margin-bottom:6px">Request Admin Access</div>
+    <div style="font-size:13px;color:#888;margin-bottom:1.5rem">Submit a request to Your System Administrator for admin access.</div>
+    <div style="text-align:left">
+      <label style="font-size:12px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Full name</label>
+      <input type="text" id="req-name" placeholder="First Last" style="width:100%;font-size:14px;padding:10px 12px;border-radius:8px;border:1.5px solid #dde1e7;font-family:inherit;outline:none;margin-bottom:14px"/>
+      <label style="font-size:12px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Requested username</label>
+      <input type="text" id="req-username" placeholder="e.g. smith" style="width:100%;font-size:14px;padding:10px 12px;border-radius:8px;border:1.5px solid #dde1e7;font-family:inherit;outline:none;margin-bottom:14px" autocapitalize="none"/>
+      <label style="font-size:12px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Badge number</label>
+      <input type="text" id="req-badge" placeholder="4-digit badge #" maxlength="4" inputmode="numeric" style="width:100%;font-size:14px;padding:10px 12px;border-radius:8px;border:1.5px solid #dde1e7;font-family:inherit;outline:none;margin-bottom:14px"/>
+    </div>
+    <div class="banner banner-err" id="req-err" style="margin-bottom:12px"></div>
+    <div class="banner banner-success" id="req-success" style="margin-bottom:12px"></div>
+    <button class="modal-ack" onclick="submitAccessRequest()">Submit Request</button>
+    <button onclick="document.getElementById('access-request-modal').classList.remove('show')" style="width:100%;padding:10px;background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-top:10px;font-family:inherit">Cancel</button>
+  </div>
+</div>
+
+<!-- SUBMISSION MODAL -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal-box">
+    <div class="modal-label">Work Order Submitted</div>
+    <div class="modal-wo" id="modal-wo-num">—</div>
+    <div class="modal-assigned" id="modal-assigned"></div>
+    <hr class="modal-divider"/>
+    <div class="modal-disclaimer">
+      <strong>Important — Please acknowledge</strong>
+      This item has been tagged with the work order number above. If applicable, the item must be placed in the <strong>out of service cage</strong> until the work order has been resolved.
+    </div>
+    <button class="modal-ack" onclick="dismissModal()">I Acknowledge</button>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+firebase.initializeApp({
+  // TODO: Replace with your Firebase project config
+  // Get this from Firebase Console → Project Settings → Your apps → Web app
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+});
+const db=firebase.firestore();
+const auth=firebase.auth();
+emailjs.init('YOUR_EMAILJS_PUBLIC_KEY'); // TODO: Replace with your EmailJS public key
+
+const EMAILJS_SERVICE='YOUR_EMAILJS_SERVICE_ID'; // TODO: Replace with your EmailJS service ID
+const EMAILJS_TEMPLATE='YOUR_EMAILJS_TEMPLATE_ID'; // TODO: Replace with your EmailJS template ID
+const TEMP_PASSWORD='welcome123';
+// TODO: Update with your department's valid badge prefixes
+const VALID_BADGE_PREFIXES=['30','31','60','61'];
+// TODO: Update with your department's junior badge prefixes
+const JUNIOR_PREFIXES=['50','51','52','53','54','55','56','57','58','59'];
+const VERSION='Beta v1.1.0';
+
+// TODO: Update this list with your department's officers
+const REASSIGN_PEOPLE=['Officer 1','Officer 2','Officer 3'];
+// TODO: Update with your department's vendors
+const VENDORS=['Vendor 1','Vendor 2','Vendor 3','Other'];
+const DELAY_REASONS=['Awaiting Parts','Parts Backordered','Vendor Unresponsive','Awaiting Budget Approval','Waiting on Inspection','Other'];
+
+// Loaded from Firebase
+let MEMBER_CODE='';
+let OFFICER_EMAILS={};
+let OFFICER_PHONES={};
+let allWorkOrders=[],currentFilter='all',currentWO=null,draftWO=null,unsubscribe=null;
+let currentAdminUser=null;
+
+// Load settings from Firebase on startup
+async function loadSettings(){
+  try{
+    const config=await db.collection('settings').doc('config').get();
+    if(config.exists) MEMBER_CODE=config.data().memberCode||'FFD2026';
+    const officers=await db.collection('settings').doc('officers').get();
+    if(officers.exists){
+      const data=officers.data();
+      Object.keys(data).forEach(username=>{
+        const o=data[username];
+        if(o.email) OFFICER_EMAILS[o.name]=o.email;
+        if(o.phone) OFFICER_PHONES[o.name]=o.phone;
+      });
+    }
+  }catch(e){
+    console.error('Error loading settings:',e);
+    MEMBER_CODE='FFD2026';
+  }
+}
+
+function checkGate(){
+  const val=document.getElementById('gate-input').value;
+  const err=document.getElementById('gate-err');
+  if(val===MEMBER_CODE){
+    localStorage.setItem('ffd_unlocked','1');
+    document.getElementById('access-gate').style.display='none';
+    document.getElementById('main-app').style.display='block';
+  } else {
+    err.classList.add('show');
+    document.getElementById('gate-input').value='';
+    setTimeout(()=>err.classList.remove('show'),3000);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async ()=>{
+  await loadSettings();
+  if(localStorage.getItem('ffd_unlocked')==='1'){
+    document.getElementById('access-gate').style.display='none';
+    document.getElementById('main-app').style.display='block';
+  }
+  document.getElementById('gate-input').focus();
+});
+
+function isValidBadge(badge){
+  if(badge.length!==4) return 'length';
+  const prefix=badge.slice(0,2);
+  if(JUNIOR_PREFIXES.includes(prefix)) return 'junior';
+  if(!VALID_BADGE_PREFIXES.includes(prefix)) return 'invalid';
+  return 'valid';
+}
+function validateBadgeLive(){
+  const v=document.getElementById('f-badge').value;
+  document.getElementById('badge-err').classList.remove('show');
+  document.getElementById('badge-junior').classList.remove('show');
+  if(v.length===4&&isValidBadge(v)==='junior') document.getElementById('badge-junior').classList.add('show');
+}
+
+function getOfficerAssignment(primary,sub,badge){
+  // TODO: Customize this routing for your department
+  // See config.js for the routing template
+  const badgeFirst=String(badge||'')[0];
+  const r=String(sub||'').trim();
+
+  if(primary==='scba') return{assigned:'SCBA Officer',notifyAll:['SCBA Officer']};
+  if(primary==='radio') return{assigned:'Radio Officer',notifyAll:['Radio Officer']};
+  if(primary==='apparatus-equip') return{assigned:'Apparatus Officer',notifyAll:['Apparatus Officer']};
+  if(primary==='apparatus-rig') return{assigned:'Apparatus Officer',notifyAll:['Apparatus Officer']};
+  if(primary==='station'){
+    if(sub==='Station Equipment') return{assigned:'Station Officer',notifyAll:['Station Officer']};
+    if(sub==='Building Issue') return{assigned:'Building Officer',notifyAll:['Building Officer']};
+  }
+  if(primary==='ff'){
+    if(sub==='Pager Issue') return{assigned:'Pager Officer',notifyAll:['Pager Officer']};
+    if(sub==='Technology Issue') return{assigned:'Tech Officer',notifyAll:['Tech Officer']};
+    if(sub==='Gear Issue') return{assigned:'Gear Officer',notifyAll:['Gear Officer']};
+    if(sub==='Gear Wash Request') return{assigned:'Gear Wash Officer',notifyAll:['Gear Wash Officer']};
+  }
+  return{assigned:'Officer TBD',notifyAll:['Officer TBD']};
+}
+
+async function sendEmail(toEmail,params){try{await emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{...params,to_email:toEmail});return true;}catch(e){console.error('Email error:',e);return false;}}
+async function sendSMS(to,message){try{const res=await fetch('/.netlify/functions/send-sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,message})});const data=await res.json();return data.success;}catch(e){console.error('SMS error:',e);return false;}}
+async function notifyOfficers(notifyAll,assigned,woId,name,badge,primary,sub,issue,date){
+  const type=getPrimaryLabel(primary)+(sub?' — '+sub:'');
+  const shortIssue=issue.length>100?issue.slice(0,100)+'...':issue;
+  const smsMsg=`FFD Work Order ${woId}\nType: ${type}\nSubmitted by: ${name} (Badge ${badge})\nAssigned to: ${assigned}\nIssue: ${shortIssue}\nView at: ffdworkorder.netlify.app`;
+  for(const officer of notifyAll){
+    const email=OFFICER_EMAILS[officer];if(email) await sendEmail(email,{wo_id:woId,submitter_name:name,badge,type,officer:assigned,notified_officer:officer,date,issue});
+    const phone=OFFICER_PHONES[officer];if(phone) await sendSMS(phone,smsMsg);
+  }
+}
+
+function getPrimaryLabel(p){return{'apparatus-equip':'On Apparatus Equipment','apparatus-rig':'Apparatus Issue',station:'Station Issue',scba:'SCBA',ff:'Firefighter Request',radio:'Radio Issue'}[p]||p;}
+function statusPill(s){const m={Submitted:'pill-red','Repair Pending':'pill-orange',Delayed:'pill-yellow',Closed:'pill-green'};return'<span class="pill '+(m[s]||'pill-red')+'">'+s+'</span>';}
+function statusDot(s){const m={Submitted:'dot-red','Repair Pending':'dot-orange',Delayed:'dot-yellow',Closed:'dot-green'};return'<span class="status-dot '+(m[s]||'dot-red')+'"></span>';}
+
+function updateSubtype(){
+  const val=document.getElementById('f-primary').value;
+  ['apparatus-equip','apparatus-rig','station','ff'].forEach(k=>{const el=document.getElementById('sub-'+k);if(el)el.style.display=val===k?'block':'none';});
+  updateGearWash();
+}
+function updateGearWash(){
+  const sub=document.getElementById('f-ff-sub');
+  const isGW=sub&&sub.value==='Gear Wash Request';
+  const issueSection=document.getElementById('issue-section');
+  const gearSection=document.getElementById('gear-wash-section');
+  if(issueSection)issueSection.style.display=isGW?'none':'block';
+  if(gearSection)gearSection.style.display=isGW?'block':'none';
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');btn.classList.add('active');
+  if(tab==='status'){document.getElementById('s-woid').value='';document.getElementById('s-badge').value='';document.getElementById('status-results').innerHTML='';}
+}
+
+function showAccessRequest(){
+  document.getElementById('access-request-modal').classList.add('show');
+}
+
+async function submitAccessRequest(){
+  const name=document.getElementById('req-name').value.trim();
+  const username=document.getElementById('req-username').value.trim().toLowerCase();
+  const badge=document.getElementById('req-badge').value.trim();
+  const errEl=document.getElementById('req-err');
+  const sucEl=document.getElementById('req-success');
+  errEl.classList.remove('show');sucEl.classList.remove('show');
+  if(!name||!username||!badge){errEl.textContent='Please fill in all fields.';errEl.classList.add('show');return;}
+  try{
+    await db.collection('accessRequests').add({
+      name,username,badge,
+      requestedAt:firebase.firestore.Timestamp.now(),
+      requestedDisplay:new Date().toLocaleString(),
+      status:'pending'
+    });
+    sucEl.textContent='Request submitted! Your System Administrator will review and contact you.';
+    sucEl.classList.add('show');
+    document.getElementById('req-name').value='';
+    document.getElementById('req-username').value='';
+    document.getElementById('req-badge').value='';
+  }catch(e){
+    errEl.textContent='Error submitting request. Please try again.';
+    errEl.classList.add('show');
+  }
+}
+
+function buildAuditEntry(current, draft, username){
+  const fields = {
+    status:'Status', handler:'Handler', vendor:'Vendor', vendorOther:'Vendor Name',
+    eta:'ETA', delayReason:'Delay Reason', reassignedTo:'Reassigned To', notes:'Notes'
+  };
+  const changes=[];
+  Object.keys(fields).forEach(key=>{
+    const oldVal=current[key]||'—';
+    const newVal=draft[key]||'—';
+    if(oldVal!==newVal) changes.push(`${fields[key]}: ${oldVal} → ${newVal}`);
+  });
+  if(!changes.length) return null;
+  return {
+    changedBy: username,
+    changedAt: new Date().toLocaleString(),
+    changes: changes
+  };
+}
+
+function renderAuditTrail(history){
+  if(!history||!history.length) return '';
+  const entries=history.slice().reverse().map(e=>`
+    <div class="audit-entry">
+      <span class="audit-entry-who">${e.changedBy}</span>
+      <span class="audit-entry-when">${e.changedAt}</span>
+      <div class="audit-entry-changes">${e.changes.join('<br>')}</div>
+    </div>
+  `).join('');
+  return `<div class="audit-trail"><div class="audit-title">Change history</div>${entries}</div>`;
+}
+
+function dismissModal(){
+  document.getElementById('submit-modal').classList.remove('show');
+}
+
+function showSubmitModal(woId, assigned, notifyAll){
+  document.getElementById('modal-wo-num').textContent = woId;
+  const notified = notifyAll.length > 1 ? notifyAll.join(' & ') : assigned;
+  document.getElementById('modal-assigned').innerHTML = 'Assigned to <strong>' + assigned + '</strong><br>Notified: ' + notified;
+  document.getElementById('submit-modal').classList.add('show');
+}
+
+function reportBug(){
+  // Switch to submit tab and pre-fill
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-submit').classList.add('active');
+  document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  document.getElementById('f-primary').value='ff';
+  updateSubtype();
+  document.getElementById('f-ff-sub').value='Technology Issue';
+  updateGearWash();
+  document.getElementById('f-issue').value=`Bug Report: FFD Work Order System - ${VERSION}: Type issue here`;
+  document.getElementById('f-issue').focus();
+  // Move cursor to end
+  const ta=document.getElementById('f-issue');
+  ta.selectionStart=ta.selectionEnd=ta.value.length;
+}
+
+async function checkAdminLogin(){
+  const username=document.getElementById('admin-user').value.trim().toLowerCase();
+  const password=document.getElementById('admin-pw').value;
+  const err=document.getElementById('login-err');
+  const fakeEmail=`${username}@ffd.internal`;
+  try{
+    const cred=await auth.signInWithEmailAndPassword(fakeEmail,password);
+    currentAdminUser=username;
+    // Check if using temp password
+    if(password===TEMP_PASSWORD){
+      document.getElementById('admin-login-view').style.display='none';
+      document.getElementById('change-pw-view').style.display='block';
+    } else {
+      showAdminDashboard();
+    }
+  }catch(e){
+    err.textContent='Incorrect username or password.';
+    err.classList.add('show');
+    setTimeout(()=>err.classList.remove('show'),3000);
+  }
+}
+
+async function changePassword(){
+  const pw1=document.getElementById('new-pw1').value;
+  const pw2=document.getElementById('new-pw2').value;
+  const err=document.getElementById('pw-err');
+  if(pw1.length<6){err.textContent='Password must be at least 6 characters.';err.classList.add('show');return;}
+  if(pw1!==pw2){err.textContent='Passwords do not match.';err.classList.add('show');return;}
+  try{
+    await auth.currentUser.updatePassword(pw1);
+    document.getElementById('change-pw-view').style.display='none';
+    showAdminDashboard();
+  }catch(e){
+    err.textContent='Error updating password. Please try again.';
+    err.classList.add('show');
+  }
+}
+
+function showAdminDashboard(){
+  document.getElementById('admin-login-view').style.display='none';
+  document.getElementById('change-pw-view').style.display='none';
+  document.getElementById('admin-main-view').style.display='block';
+  document.getElementById('admin-username-row').innerHTML='Signed in as <strong style="margin-left:4px">'+currentAdminUser+'</strong><button onclick="signOut()" style="margin-left:auto;background:none;border:none;color:#C8382A;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>';
+  startListening();
+}
+
+function signOut(){
+  auth.signOut();
+  document.getElementById('admin-main-view').style.display='none';
+  document.getElementById('admin-login-view').style.display='flex';
+  document.getElementById('admin-user').value='';
+  document.getElementById('admin-pw').value='';
+  currentAdminUser=null;
+  if(unsubscribe){unsubscribe();unsubscribe=null;}
+}
+
+function startListening(){if(unsubscribe)unsubscribe();unsubscribe=db.collection('workOrders').orderBy('submittedAt','desc').onSnapshot(snap=>{allWorkOrders=snap.docs.map(d=>({id:d.id,...d.data()}));renderStats();if(currentWO){const updated=allWorkOrders.find(w=>w.id===currentWO.id);if(updated)currentWO=updated;}renderList();});}
+
+function getHandlerDisplay(wo){if(wo.reassignedTo)return wo.reassignedTo;if(wo.handler==='Outside Vendor')return wo.vendor==='Other'?(wo.vendorOther||'Outside Vendor'):wo.vendor||'Outside Vendor';if(wo.handler==='DPW')return'DPW';if(wo.handler==='Handled Internally')return wo.assignedOfficer||'Internal';return wo.assignedOfficer||'Pending assignment';}
+
+function renderMemberWO(wo){
+  const handler=getHandlerDisplay(wo);
+  return`<div class="wo-card member-card" style="cursor:default;border-left:4px solid #e2e5ea">
+    <div class="wo-head"><span class="wo-num">${wo.woId||wo.id}</span>${statusPill(wo.status)}<span class="wo-type">${getPrimaryLabel(wo.primary)}${wo.sub?' — '+wo.sub:''}</span></div>
+    <div class="status-big">${statusDot(wo.status)}<span style="font-size:15px;font-weight:700;color:#0C1F3D">${wo.status}</span></div>
+    <div class="member-wo-detail">
+      <div class="member-row"><span class="member-row-lbl">Submitted</span><span class="member-row-val">${wo.submittedDisplay||''}</span></div>
+      <div class="member-row"><span class="member-row-lbl">Submitted by</span><span class="member-row-val">${wo.name} — Badge ${wo.badge}</span></div>
+      <div class="member-row"><span class="member-row-lbl">Assigned to</span><span class="member-row-val" style="color:#C8382A">${handler}</span></div>
+      ${wo.eta?'<div class="member-row"><span class="member-row-lbl">ETA</span><span class="member-row-val">'+wo.eta+'</span></div>':''}
+      ${wo.status==='Delayed'&&wo.delayReason?'<div class="member-row"><span class="member-row-lbl">Delay reason</span><span class="member-row-val">'+wo.delayReason+'</span></div>':''}
+      <div class="member-row"><span class="member-row-lbl">Issue</span><span class="member-row-val" style="font-weight:400">${wo.issue}</span></div>
+    </div>
+  </div>`;
+}
+
+async function searchByWOID(){const val=document.getElementById('s-woid').value.trim();const el=document.getElementById('status-results');if(!val){el.innerHTML='<div class="no-results">Please enter a work order number.</div>';return;}el.innerHTML='<div class="loading-state">Searching...</div>';try{const doc=await db.collection('workOrders').doc(val).get();if(!doc.exists){el.innerHTML='<div class="no-results">No work order found with that number.</div>';return;}el.innerHTML=renderMemberWO({id:doc.id,...doc.data()});}catch(e){el.innerHTML='<div class="no-results">Error searching. Please try again.</div>';}}
+async function searchByBadge(){const val=document.getElementById('s-badge').value.trim();const el=document.getElementById('status-results');if(!val||val.length!==4){el.innerHTML='<div class="no-results">Please enter a valid 4-digit badge number.</div>';return;}el.innerHTML='<div class="loading-state">Searching...</div>';try{const snap=await db.collection('workOrders').where('badge','==',val).orderBy('submittedAt','desc').get();if(snap.empty){el.innerHTML='<div class="no-results">No work orders found for badge '+val+'.</div>';return;}el.innerHTML=snap.docs.map(d=>renderMemberWO({id:d.id,...d.data()})).join('');}catch(e){console.error(e);el.innerHTML='<div class="no-results">Error searching. Please try again in a moment.</div>';}}
+
+async function getWONumber(){const yr=String(new Date().getFullYear()).slice(2);const ref=db.collection('counters').doc('workOrders');return db.runTransaction(async t=>{const doc=await t.get(ref);const count=(doc.exists?doc.data().count:0)+1;t.set(ref,{count});return yr+'-'+String(count).padStart(4,'0');});}
+
+async function submitWorkOrder(){
+  let valid=true;
+  const nameEl=document.getElementById('f-name'),badgeEl=document.getElementById('f-badge'),primaryEl=document.getElementById('f-primary'),issueEl=document.getElementById('f-issue');
+  [nameEl,badgeEl,primaryEl,issueEl].forEach(e=>e.classList.remove('err'));
+  document.getElementById('badge-err').classList.remove('show');document.getElementById('badge-junior').classList.remove('show');
+  if(!nameEl.value.trim()){nameEl.classList.add('err');valid=false;}
+  const badge=badgeEl.value.trim();const badgeResult=isValidBadge(badge);
+  if(badgeResult==='length'||badgeResult==='invalid'){badgeEl.classList.add('err');document.getElementById('badge-err').classList.add('show');valid=false;}
+  else if(badgeResult==='junior'){document.getElementById('badge-junior').classList.add('show');valid=false;}
+  const primary=primaryEl.value;if(!primary){primaryEl.classList.add('err');valid=false;}
+  let sub='';
+  if(primary==='apparatus-equip'){const el=document.getElementById('f-rig-equip');if(!el.value){el.classList.add('err');valid=false;}else sub=el.value;}
+  if(primary==='apparatus-rig'){const el=document.getElementById('f-rig-rig');if(!el.value){el.classList.add('err');valid=false;}else sub=el.value;}
+  if(primary==='station'){const el=document.getElementById('f-station-sub');if(!el.value){el.classList.add('err');valid=false;}else sub=el.value;}
+  if(primary==='ff'){const el=document.getElementById('f-ff-sub');if(!el.value){el.classList.add('err');valid=false;}else sub=el.value;}
+  const isGearWash=primary==='ff'&&sub==='Gear Wash Request';
+  if(!isGearWash&&!issueEl.value.trim()){issueEl.classList.add('err');valid=false;}
+  if(isGearWash){const gwErr=document.getElementById('gw-err');gwErr.style.display='none';const allChecked=['gw-bailout','gw-pockets','gw-external'].every(id=>document.getElementById(id)&&document.getElementById(id).checked);if(!allChecked){gwErr.style.display='block';valid=false;}}
+  if(!valid)return;
+  const btn=document.getElementById('submit-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Submitting...';
+  try{
+    const{assigned,notifyAll}=getOfficerAssignment(primary,sub,badge);
+    const woId=await getWONumber();const now=new Date();const name=nameEl.value.trim();
+    const issue=isGearWash?'Gear Wash Request — Bailout harness removed, pockets emptied, external items removed. Ready for washing.':issueEl.value.trim();
+    const dateStr=now.toLocaleString();
+    await db.collection('workOrders').doc(woId).set({woId,name,badge,primary,sub,issue,status:'Submitted',submittedAt:firebase.firestore.Timestamp.now(),submittedDisplay:dateStr,assignedOfficer:assigned,officers:notifyAll,notifiedAt:dateStr,handler:'',vendor:'',vendorOther:'',eta:'',notes:'',delayReason:'',reassignedTo:'',reassignedAt:''});
+    await notifyOfficers(notifyAll,assigned,woId,name,badge,primary,sub,issue,dateStr);
+    showSubmitModal(woId, assigned, notifyAll);
+    nameEl.value='';badgeEl.value='';primaryEl.value='';issueEl.value='';
+    ['gw-bailout','gw-pockets','gw-external'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    updateSubtype();
+  }catch(e){console.error(e);const err=document.getElementById('submit-err');err.textContent='Error submitting. Please try again.';err.classList.add('show');setTimeout(()=>err.classList.remove('show'),5000);}
+  btn.disabled=false;btn.textContent='Submit Work Order';
+}
+
+function renderStats(){const c={Submitted:0,'Repair Pending':0,Delayed:0,Closed:0};allWorkOrders.forEach(w=>{if(c[w.status]!==undefined)c[w.status]++;});document.getElementById('s-submitted').textContent=c['Submitted'];document.getElementById('s-pending').textContent=c['Repair Pending'];document.getElementById('s-delayed').textContent=c['Delayed'];document.getElementById('s-closed').textContent=c['Closed'];}
+function renderList(){const filtered=currentFilter==='all'?allWorkOrders:allWorkOrders.filter(w=>w.status===currentFilter);const el=document.getElementById('wo-list');if(!filtered.length){el.innerHTML='<div class="loading-state">No work orders found.</div>';return;}el.innerHTML=filtered.map(wo=>{const sc='status-'+wo.status.replace(' ','-');return'<div class="wo-card '+sc+'" onclick="openDetail(\''+wo.id+'\')"><div class="wo-head"><span class="wo-num">'+(wo.woId||wo.id)+'</span>'+statusPill(wo.status)+(wo.reassignedTo?'<span class="pill pill-blue">Reassigned</span>':'')+'<span class="wo-type">'+getPrimaryLabel(wo.primary)+(wo.sub?' — '+wo.sub:'')+'</span></div><div class="wo-meta">'+wo.name+' · Badge '+wo.badge+' · '+(wo.submittedDisplay||'')+' · Assigned: <strong style="color:#0C1F3D">'+(wo.assignedOfficer||'')+'</strong></div><div class="wo-preview">'+((wo.issue||'').length>90?wo.issue.slice(0,90)+'...':wo.issue)+'</div></div>';}).join('');}
+function filterWO(f,btn){currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');renderList();}
+function openDetail(id){currentWO=allWorkOrders.find(w=>w.id===id);draftWO=JSON.parse(JSON.stringify(currentWO));document.getElementById('admin-list').classList.add('hidden');document.getElementById('admin-detail').classList.add('active');renderDetail();}
+function closeDetail(){currentWO=null;draftWO=null;document.getElementById('admin-list').classList.remove('hidden');document.getElementById('admin-detail').classList.remove('active');renderList();}
+
+function renderDetail(){
+  const wo=draftWO;const notifyList=(wo.officers||[wo.assignedOfficer||'']).join(' & ');
+  document.getElementById('detail-content').innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap"><span style="font-size:20px;font-weight:800;color:#0C1F3D;font-family:monospace;letter-spacing:.05em">'+(wo.woId||wo.id)+'</span>'+statusPill(currentWO.status)+(wo.reassignedTo?'<span class="pill pill-blue">Reassigned</span>':'')+'<span class="unsaved-badge" id="unsaved-indicator" style="display:none">Unsaved changes</span></div><div class="card"><div class="card-header"><div class="card-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.2 20a8 8 0 0 1 13.6 0"/></svg></div><div class="card-title">Submission details</div></div><div class="grid2"><div class="info-block"><div class="info-lbl">Submitted by</div><div class="info-val">'+wo.name+'<br><span style="font-weight:400;color:#888;font-size:12px">Badge '+wo.badge+'</span></div></div><div class="info-block"><div class="info-lbl">Date submitted</div><div class="info-val" style="font-size:13px">'+(wo.submittedDisplay||'')+'</div></div><div class="info-block full"><div class="info-lbl">Type</div><div class="info-val">'+getPrimaryLabel(wo.primary)+(wo.sub?' — '+wo.sub:'')+'</div></div><div class="info-block full"><div class="info-lbl">Issue description</div><div class="info-val" style="font-weight:400;line-height:1.6">'+wo.issue+'</div></div></div><div class="notify-box" style="margin-top:14px"><div class="notify-lbl">Notification sent</div>Assigned to <strong>'+(wo.assignedOfficer||'')+'</strong> · Notified: '+notifyList+' at '+(wo.notifiedAt||'')+(wo.reassignedTo?'<div style="margin-top:6px">Reassigned to <strong>'+wo.reassignedTo+'</strong> at '+wo.reassignedAt+'</div>':'')+'</div></div><div class="card"><div class="official-bar">For official use only</div><div class="grid2"><div><label>Assigned officer</label><input type="text" value="'+(wo.assignedOfficer||'')+'" readonly/></div><div><label>Date &amp; time of notification</label><input type="text" value="'+(wo.notifiedAt||'')+'" readonly/></div><div class="full"><label>Who is handling this?</label><div class="sel-wrap"><select onchange="draftWO.handler=this.value;markUnsaved();toggleVendor()"><option value="">Select</option><option '+(wo.handler==='Outside Vendor'?'selected':'')+'>Outside Vendor</option><option '+(wo.handler==='Handled Internally'?'selected':'')+'>Handled Internally</option><option '+(wo.handler==='DPW'?'selected':'')+'>DPW</option></select></div></div><div id="vendor-section" style="display:'+(wo.handler==='Outside Vendor'?'block':'none')+';" class="full"><label>Vendor</label><div class="sel-wrap"><select onchange="draftWO.vendor=this.value;markUnsaved();toggleVendorOther()"><option value="">Select vendor</option>'+VENDORS.map(v=>'<option '+(wo.vendor===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div></div><div id="vendor-other-section" style="display:'+(wo.handler==='Outside Vendor'&&wo.vendor==='Other'?'block':'none')+';" class="full"><label>Vendor name</label><input type="text" id="vendor-other-input" value="'+(wo.vendorOther||'')+'" placeholder="Enter vendor name" oninput="draftWO.vendorOther=this.value;markUnsaved()"/></div><div><label>ETA to resolve</label><input type="date" value="'+(wo.eta||'')+'" onchange="draftWO.eta=this.value;markUnsaved()"/></div><div><label>Status</label><div class="sel-wrap"><select onchange="draftWO.status=this.value;markUnsaved();toggleDelay()"><option '+(wo.status==='Submitted'?'selected':'')+'>Submitted</option><option '+(wo.status==='Repair Pending'?'selected':'')+'>Repair Pending</option><option '+(wo.status==='Delayed'?'selected':'')+'>Delayed</option><option '+(wo.status==='Closed'?'selected':'')+'>Closed</option></select></div></div><div id="delay-section" style="display:'+(wo.status==='Delayed'?'block':'none')+';" class="full"><label>Delay reason</label><div class="sel-wrap"><select onchange="draftWO.delayReason=this.value;markUnsaved()"><option value="">Select reason</option>'+DELAY_REASONS.map(r=>'<option '+(wo.delayReason===r?'selected':'')+'>'+r+'</option>').join('')+'</select></div></div><div class="full"><label>Reassign to (optional)</label><div class="sel-wrap"><select onchange="draftWO.reassignedTo=this.value;draftWO.reassignedAt=this.value?new Date().toLocaleString():\'\';markUnsaved()"><option value="">No reassignment</option>'+REASSIGN_PEOPLE.map(p=>'<option '+(wo.reassignedTo===p?'selected':'')+'>'+p+'</option>').join('')+'</select></div>'+(wo.reassignedTo?'<div style="font-size:12px;color:#888;margin-top:5px">Last reassigned to <strong>'+wo.reassignedTo+'</strong> at '+wo.reassignedAt+'</div>':'')+'</div><div class="full"><label>Internal notes</label><textarea oninput="draftWO.notes=this.value;markUnsaved()" placeholder="Vendor contacted, tracking number, follow-up dates...">'+(wo.notes||'')+'</textarea></div></div><button class="btn-save" onclick="saveDetail()">Save Updates</button><div class="banner banner-success" id="detail-success" style="margin-top:12px"></div><div class="banner banner-err" id="detail-err" style="margin-top:12px"></div></div>';
+}
+
+function markUnsaved(){const el=document.getElementById('unsaved-indicator');if(el)el.style.display='inline-block';}
+function toggleVendor(){const el=document.getElementById('vendor-section');if(el)el.style.display=draftWO.handler==='Outside Vendor'?'block':'none';}
+function toggleVendorOther(){const el=document.getElementById('vendor-other-section');if(el)el.style.display=draftWO.vendor==='Other'?'block':'none';}
+function toggleDelay(){const el=document.getElementById('delay-section');if(el)el.style.display=draftWO.status==='Delayed'?'block':'none';}
+
+async function saveDetail(){
+  if(!draftWO)return;
+  const btn=document.querySelector('#detail-content .btn-save');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Saving...';}
+  try{
+    if(draftWO.reassignedTo&&draftWO.reassignedTo!==currentWO.reassignedTo){
+      const person=draftWO.reassignedTo;
+      const email=OFFICER_EMAILS[person];if(email) await sendEmail(email,{wo_id:draftWO.woId,submitter_name:draftWO.name,badge:draftWO.badge,type:getPrimaryLabel(draftWO.primary)+(draftWO.sub?' — '+draftWO.sub:''),officer:person,notified_officer:person,date:draftWO.reassignedAt,issue:'REASSIGNED TO YOU: '+draftWO.issue});
+      const phone=OFFICER_PHONES[person];if(phone) await sendSMS(phone,'FFD Work Order '+draftWO.woId+' reassigned to you.\n'+getPrimaryLabel(draftWO.primary)+(draftWO.sub?' — '+draftWO.sub:'')+'\nView at: ffdworkorder.netlify.app');
+    }
+    const auditEntry=buildAuditEntry(currentWO,draftWO,currentAdminUser||'admin');
+    const history=currentWO.history||[];
+    if(auditEntry) history.push(auditEntry);
+    await db.collection('workOrders').doc(draftWO.id).update({status:draftWO.status||'',handler:draftWO.handler||'',vendor:draftWO.vendor||'',vendorOther:draftWO.vendorOther||'',eta:draftWO.eta||'',notes:draftWO.notes||'',delayReason:draftWO.delayReason||'',reassignedTo:draftWO.reassignedTo||'',reassignedAt:draftWO.reassignedAt||'',history});
+    draftWO.history=history;
+    currentWO=JSON.parse(JSON.stringify(draftWO));
+    const ind=document.getElementById('unsaved-indicator');if(ind)ind.style.display='none';
+    const b=document.getElementById('detail-success');b.textContent='Saved successfully.';b.classList.add('show');setTimeout(()=>b.classList.remove('show'),3000);
+  }catch(e){console.error(e);const b=document.getElementById('detail-err');b.textContent='Error saving. Please try again.';b.classList.add('show');setTimeout(()=>b.classList.remove('show'),3000);}
+  if(btn){btn.disabled=false;btn.textContent='Save Updates';}
+}
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
